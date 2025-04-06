@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { driverOptions } from "F1--race-strategy/frontend/src/Components/DriverOptions"; // adjust path if needed
+import { driverOptions as driverCodeMap } from "F1--race-strategy/frontend/src/Components/DriverOptions"; // adjust path if needed
 
 const InputForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     track: '',
-    year: '2024',
+    year: '',
     team: '',
     driver: '',
     trackTempMin: '',
     trackTempMax: '',
     rainfall: ''
   });
+
+  // Years in your dataset (update if more are available)
+  const years = ['2018','2019', '2020', '2021', '2022'];
 
   // Track options based on 2024 F1 calendar
   const tracks = [
@@ -38,7 +41,6 @@ const InputForm = ({ onSubmit }) => {
     'Yas Marina Circuit'
   ];
 
-  // F1 teams for 2024
   const teams = [
     'Red Bull Racing',
     'Mercedes',
@@ -52,7 +54,6 @@ const InputForm = ({ onSubmit }) => {
     'Haas F1 Team'
   ];
 
-  // Driver options based on teams
   const driverOptions = {
     'Red Bull Racing': ['Max Verstappen', 'Sergio Perez'],
     'Mercedes': ['Lewis Hamilton', 'George Russell'],
@@ -66,7 +67,6 @@ const InputForm = ({ onSubmit }) => {
     'Haas F1 Team': ['Kevin Magnussen', 'Nico Hülkenberg']
   };
 
-  // Rainfall options
   const rainfallOptions = [
     'No Rain',
     'Light Rain',
@@ -74,18 +74,20 @@ const InputForm = ({ onSubmit }) => {
     'Heavy Rain'
   ];
 
-  // Handle input changes
+  const getDriverCode = (fullName) => {
+    const match = driverCodeMap.find(d => d.label === fullName);
+    return match ? match.value : fullName;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevData => ({
       ...prevData,
       [name]: value,
-      // Reset driver when team changes
       ...(name === 'team' ? { driver: '' } : {})
     }));
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
@@ -117,7 +119,10 @@ const InputForm = ({ onSubmit }) => {
             onChange={handleChange}
             required
           >
-            <option value="2024">2024</option>
+            <option value="" disabled>Select year</option>
+            {years.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
           </select>
         </div>
 
@@ -147,7 +152,7 @@ const InputForm = ({ onSubmit }) => {
           >
             <option value="" disabled>Select driver</option>
             {formData.team && driverOptions[formData.team].map(driver => (
-              <option key={driver} value={driver}>{driver}</option>
+              <option key={driver} value={getDriverCode(driver)}>{driver}</option>
             ))}
           </select>
         </div>
