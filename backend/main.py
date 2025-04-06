@@ -3,8 +3,8 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import joblib
+
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -12,7 +12,7 @@ app = FastAPI()
 # ✅ CORS configuration
 origins = [
     "http://localhost:5173",                      # Local dev
-    "https://f1-race-strategy.onrender.com"       # Render frontend URL
+    "https://f1-race-strategy.onrender.com"       # Replace with actual frontend Render URL
 ]
 
 app.add_middleware(
@@ -44,13 +44,14 @@ class InputFeatures(BaseModel):
     EventName: str
     Team: str
     Driver: str
+    meanAirTemp: float
     Rainfall: float
 
 # ✅ Predict route
 @app.post("/predict")
 def predict_strategy(input: InputFeatures):
     try:
-        # Filter dataset by matching on selected fields
+        # Step 1: Filter dataset with essential fields only
         filtered = data[
             (data["eventYear"] == input.eventYear) &
             (data["EventName"] == input.EventName) &
@@ -62,30 +63,22 @@ def predict_strategy(input: InputFeatures):
         if filtered.empty:
             raise HTTPException(status_code=404, detail="No matching race found in the dataset.")
 
+        # Step 2: Use first matching row and override user-controlled values
         row = filtered.iloc[0].copy()
+        row["meanAirTemp"] = input.meanAirTemp
+        row["Rainfall"] = input.Rainfall
 
-        # Step 1: Fill inferred features from matched row
-        input_dict = {
-            "eventYear": input.eventYear,
-            "EventName": input.EventName,
-            "Team": input.Team,
-            "Driver": input.Driver,
-            "meanAirTemp": row["meanAirTemp"],
-            "TrackTempAvg": row["TrackTempAvg"],
-            "Rainfall": input.Rainfall
-        }
-
-        input_df = pd.DataFrame([input_dict])
-
-        # Step 2: Encode categoricals
+        # Step 3: Encode categoricals
         for col, le in label_encoders.items():
-            if col in input_df.columns:
-                input_df[col] = le.transform(input_df[col])
+            if col in row:
+                row[col] = le.transform([row[col]])[0]
 
-        # Step 3: Scale
-        row_scaled = scaler.transform(input_df[scaler.feature_names_in_])
+        # Step 4: Scale numeric features
+        numeric_features = scaler.feature_names_in_
+        row_scaled = row[numeric_features].values.reshape(1, -1)
+        row_scaled = scaler.transform(row_scaled)
 
-        # Step 4: Predict
+        # Step 5: Predictions
         total_pitstops = pitstops_model.predict(row_scaled)[0]
         pit_laps = pitlap_model.predict(row_scaled)[0]
 
@@ -98,7 +91,10 @@ def predict_strategy(input: InputFeatures):
         for lap in pit_laps:
             compound_encoded = tire_model.predict(np.hstack((row_scaled, [[lap]])))[0]
             compound = label_encoders["Compound"].inverse_transform([compound_encoded])[0]
-            tire_strategy.append({"Lap": int(lap), "Compound": compound})
+            tire_strategy.append({
+                "Lap": int(lap),
+                "Compound": compound
+            })
 
         return {
             "Total Pit Stops": int(total_pitstops),
@@ -106,5 +102,7 @@ def predict_strategy(input: InputFeatures):
             "Tire Strategy": tire_strategy
         }
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        raise HTTPException(status_code=500, detail=str(e))
