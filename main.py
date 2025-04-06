@@ -6,36 +6,39 @@ import joblib
 
 from fastapi.middleware.cors import CORSMiddleware
 
+# Initialize FastAPI app
 app = FastAPI()
 
-# Allow CORS from all origins (good for development)
+# ✅ CORS configuration
+origins = [
+    "http://localhost:5173",                      # Local dev
+    "https://f1-race-strategy.onrender.com"          # Replace with actual frontend Render URL
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173/"],  # Change to your frontend domain in production
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["http://localhost:5173/"],
-    allow_headers=["http://localhost:5173/"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Load models and encoders
+# ✅ Load models and encoders
 pitstops_model = joblib.load("pitstops_model.pkl")
 pitlap_model = joblib.load("pitlap_model.pkl")
 tire_model = joblib.load("tire_model.pkl")
 scaler = joblib.load("scaler.pkl")
 label_encoders = joblib.load("label_encoders.pkl")
 
-# Load dataset to lookup additional features
+# ✅ Load dataset for lookup
 data = pd.read_csv("final_data_clean.csv")
 
-# Define API app
-app = FastAPI()
-
-# Optional root endpoint
+# ✅ Root route
 @app.get("/")
 def read_root():
     return {"message": "Race Strategy Prediction API is live!"}
 
-# Define expected input schema
+# ✅ Input schema
 class InputFeatures(BaseModel):
     eventYear: int
     EventName: str
@@ -44,9 +47,10 @@ class InputFeatures(BaseModel):
     meanAirTemp: float
     Rainfall: float
 
+# ✅ Predict route
 @app.post("/predict")
 def predict_strategy(input: InputFeatures):
-    # Step 1: Filter dataset based on user input
+    # Step 1: Filter dataset based on input
     filtered = data[
         (data["eventYear"] == input.eventYear) &
         (data["EventName"] == input.EventName) &
@@ -57,24 +61,23 @@ def predict_strategy(input: InputFeatures):
     if filtered.empty:
         raise HTTPException(status_code=404, detail="No matching race found in the dataset.")
 
-    # Take the first match (assuming only one row matches)
     row = filtered.iloc[0].copy()
 
-    # Step 2: Replace user-controlled fields
+    # Step 2: Override user-controlled fields
     row["meanAirTemp"] = input.meanAirTemp
     row["Rainfall"] = input.Rainfall
 
-    # Step 3: Encode categorical values
+    # Step 3: Encode categoricals
     for col, le in label_encoders.items():
         if col in row:
             row[col] = le.transform([row[col]])[0]
 
-    # Step 4: Scale numerical features
+    # Step 4: Scale numeric features
     numeric_features = scaler.feature_names_in_
     row_scaled = row[numeric_features].values.reshape(1, -1)
     row_scaled = scaler.transform(row_scaled)
 
-    # Step 5: Make predictions
+    # Step 5: Predictions
     total_pitstops = pitstops_model.predict(row_scaled)[0]
 
     pit_laps = pitlap_model.predict(row_scaled)[0]
