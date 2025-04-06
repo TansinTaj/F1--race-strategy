@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { driverOptions } from "F1--race-strategy/frontend/src/Components/DriverOptions"; // adjust path if needed
 
 const InputForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
