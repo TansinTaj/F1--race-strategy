@@ -17,6 +17,11 @@ data = pd.read_csv("final_data_clean.csv")
 # Define API app
 app = FastAPI()
 
+# Optional root endpoint
+@app.get("/")
+def read_root():
+    return {"message": "Race Strategy Prediction API is live!"}
+
 # Define expected input schema
 class InputFeatures(BaseModel):
     eventYear: int
