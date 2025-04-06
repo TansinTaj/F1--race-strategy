@@ -4,6 +4,19 @@ import pandas as pd
 import numpy as np
 import joblib
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Allow CORS from all origins (good for development)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173/"],  # Change to your frontend domain in production
+    allow_credentials=True,
+    allow_methods=["http://localhost:5173/"],
+    allow_headers=["http://localhost:5173/"],
+)
+
 # Load models and encoders
 pitstops_model = joblib.load("pitstops_model.pkl")
 pitlap_model = joblib.load("pitlap_model.pkl")
