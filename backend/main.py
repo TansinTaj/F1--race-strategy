@@ -3,8 +3,8 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import joblib
-
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -12,7 +12,7 @@ app = FastAPI()
 # ✅ CORS configuration
 origins = [
     "http://localhost:5173",                      # Local dev
-    "https://f1-race-strategy.onrender.com"          # Replace with actual frontend Render URL
+    "https://f1-race-strategy.onrender.com"       # Render frontend URL
 ]
 
 app.add_middleware(
@@ -44,59 +44,67 @@ class InputFeatures(BaseModel):
     EventName: str
     Team: str
     Driver: str
-    meanAirTemp: float
     Rainfall: float
 
 # ✅ Predict route
 @app.post("/predict")
 def predict_strategy(input: InputFeatures):
-    # Step 1: Filter dataset based on input
-    filtered = data[
-        (data["eventYear"] == input.eventYear) &
-        (data["EventName"] == input.EventName) &
-        (data["Team"] == input.Team) &
-        (data["Driver"] == input.Driver)
-    ]
+    try:
+        # Filter dataset by matching on selected fields
+        filtered = data[
+            (data["eventYear"] == input.eventYear) &
+            (data["EventName"] == input.EventName) &
+            (data["Team"] == input.Team) &
+            (data["Driver"] == input.Driver) &
+            (data["Rainfall"] == input.Rainfall)
+        ]
 
-    if filtered.empty:
-        raise HTTPException(status_code=404, detail="No matching race found in the dataset.")
+        if filtered.empty:
+            raise HTTPException(status_code=404, detail="No matching race found in the dataset.")
 
-    row = filtered.iloc[0].copy()
+        row = filtered.iloc[0].copy()
 
-    # Step 2: Override user-controlled fields
-    row["meanAirTemp"] = input.meanAirTemp
-    row["Rainfall"] = input.Rainfall
+        # Step 1: Fill inferred features from matched row
+        input_dict = {
+            "eventYear": input.eventYear,
+            "EventName": input.EventName,
+            "Team": input.Team,
+            "Driver": input.Driver,
+            "meanAirTemp": row["meanAirTemp"],
+            "TrackTempAvg": row["TrackTempAvg"],
+            "Rainfall": input.Rainfall
+        }
 
-    # Step 3: Encode categoricals
-    for col, le in label_encoders.items():
-        if col in row:
-            row[col] = le.transform([row[col]])[0]
+        input_df = pd.DataFrame([input_dict])
 
-    # Step 4: Scale numeric features
-    numeric_features = scaler.feature_names_in_
-    row_scaled = row[numeric_features].values.reshape(1, -1)
-    row_scaled = scaler.transform(row_scaled)
+        # Step 2: Encode categoricals
+        for col, le in label_encoders.items():
+            if col in input_df.columns:
+                input_df[col] = le.transform(input_df[col])
 
-    # Step 5: Predictions
-    total_pitstops = pitstops_model.predict(row_scaled)[0]
+        # Step 3: Scale
+        row_scaled = scaler.transform(input_df[scaler.feature_names_in_])
 
-    pit_laps = pitlap_model.predict(row_scaled)[0]
-    if total_pitstops == 1:
-        pit_laps = [pit_laps]
-    else:
-        pit_laps = sorted(list(pit_laps))[:int(total_pitstops)]
+        # Step 4: Predict
+        total_pitstops = pitstops_model.predict(row_scaled)[0]
+        pit_laps = pitlap_model.predict(row_scaled)[0]
 
-    tire_strategy = []
-    for lap in pit_laps:
-        compound_encoded = tire_model.predict(np.hstack((row_scaled, [[lap]])))[0]
-        compound = label_encoders["Compound"].inverse_transform([compound_encoded])[0]
-        tire_strategy.append({
-            "Lap": int(lap),
-            "Compound": compound
-        })
+        if total_pitstops == 1:
+            pit_laps = [pit_laps]
+        else:
+            pit_laps = sorted(list(pit_laps))[:int(total_pitstops)]
 
-    return {
-        "Total Pit Stops": int(total_pitstops),
-        "Pit Stop Laps": [int(lap) for lap in pit_laps],
-        "Tire Strategy": tire_strategy
-    }
+        tire_strategy = []
+        for lap in pit_laps:
+            compound_encoded = tire_model.predict(np.hstack((row_scaled, [[lap]])))[0]
+            compound = label_encoders["Compound"].inverse_transform([compound_encoded])[0]
+            tire_strategy.append({"Lap": int(lap), "Compound": compound})
+
+        return {
+            "Total Pit Stops": int(total_pitstops),
+            "Pit Stop Laps": [int(lap) for lap in pit_laps],
+            "Tire Strategy": tire_strategy
+        }
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
