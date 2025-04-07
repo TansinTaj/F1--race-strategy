@@ -80,15 +80,18 @@ def predict_strategy(input: InputFeatures):
             "Pit Stop Laps": [int(lap) for lap in pit_laps],
             "Tire Strategy": tire_strategy
         }
-    @app.get("/available-years")
-    def get_available_years():
-        try:
-            years = sorted(data["eventYear"].unique().tolist())
-            return {"years": years}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
 
     except HTTPException as e:
         raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ✅ This should NOT be inside predict_strategy
+@app.get("/available-years")
+def get_available_years():
+    try:
+        years = sorted(data["eventYear"].unique().tolist())
+        return {"years": years}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
