@@ -1,11 +1,20 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # Add this
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import joblib
 
-# Initialize the FastAPI app
 app = FastAPI()
+
+# ✅ Allow frontend to talk to backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or restrict to your frontend only
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load the dataset and models
 data = pd.read_csv("final_data_clean.csv")  # Replace with actual dataset path
