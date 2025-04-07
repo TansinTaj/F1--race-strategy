@@ -12,10 +12,8 @@ const InputForm = ({ onSubmit }) => {
     rainfall: ''
   });
 
-  // Years in your dataset (update if more are available)
-  const years = ['2018','2019', '2020', '2021', '2022'];
+  const years = ['2018', '2019', '2020', '2021', '2022'];
 
-  // Track options based on 2024 F1 calendar
   const tracks = [
     'Bahrain International Circuit',
     'Jeddah Corniche Circuit',
@@ -67,12 +65,7 @@ const InputForm = ({ onSubmit }) => {
     'Haas F1 Team': ['Kevin Magnussen', 'Nico Hülkenberg']
   };
 
-  const rainfallOptions = [
-    'No Rain',
-    'Light Rain',
-    'Medium Rain',
-    'Heavy Rain'
-  ];
+  const rainfallOptions = ['No Rain', 'Rain'];
 
   const getDriverCode = (fullName) => {
     const match = driverCodeMap.find(d => d.label === fullName);
@@ -90,7 +83,21 @@ const InputForm = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    const meanAirTemp = (
+      (parseFloat(formData.trackTempMin) + parseFloat(formData.trackTempMax)) / 2
+    ).toFixed(2);
+
+    const rainfallValue = formData.rainfall === 'No Rain' ? 0 : 1;
+
+    onSubmit({
+      eventYear: parseInt(formData.year),
+      EventName: formData.track,
+      Team: formData.team,
+      Driver: formData.driver,
+      meanAirTemp: parseFloat(meanAirTemp),
+      Rainfall: rainfallValue
+    });
   };
 
   return (
@@ -98,7 +105,7 @@ const InputForm = ({ onSubmit }) => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Track</label>
-          <select 
+          <select
             name="track"
             value={formData.track}
             onChange={handleChange}
@@ -113,7 +120,7 @@ const InputForm = ({ onSubmit }) => {
 
         <div className="form-group">
           <label>Year</label>
-          <select 
+          <select
             name="year"
             value={formData.year}
             onChange={handleChange}
@@ -128,7 +135,7 @@ const InputForm = ({ onSubmit }) => {
 
         <div className="form-group">
           <label>Team</label>
-          <select 
+          <select
             name="team"
             value={formData.team}
             onChange={handleChange}
@@ -143,7 +150,7 @@ const InputForm = ({ onSubmit }) => {
 
         <div className="form-group">
           <label>Driver</label>
-          <select 
+          <select
             name="driver"
             value={formData.driver}
             onChange={handleChange}
@@ -161,16 +168,16 @@ const InputForm = ({ onSubmit }) => {
           <div className="form-group">
             <label>Track Temp (°C)</label>
             <div className="temp-range">
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="trackTempMin"
                 placeholder="Min"
                 value={formData.trackTempMin}
                 onChange={handleChange}
                 required
               />
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="trackTempMax"
                 placeholder="Max"
                 value={formData.trackTempMax}
@@ -183,7 +190,7 @@ const InputForm = ({ onSubmit }) => {
 
         <div className="form-group">
           <label>Rainfall</label>
-          <select 
+          <select
             name="rainfall"
             value={formData.rainfall}
             onChange={handleChange}
