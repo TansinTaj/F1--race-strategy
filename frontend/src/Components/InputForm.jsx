@@ -324,11 +324,11 @@ const InputForm = ({ onSubmit }) => {
       errors.push('Temperature values must be valid numbers');
     } else {
       if (tempMin < VALIDATION_RANGES.temperature.min || tempMin > VALIDATION_RANGES.temperature.max) {
-        errors.push(Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C);
-      }
+        errors.push(`Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
+        }
       if (tempMax < VALIDATION_RANGES.temperature.min || tempMax > VALIDATION_RANGES.temperature.max) {
-        errors.push(Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C);
-      }
+        errors.push(`Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
+        }
       if (tempMin > tempMax) {
         errors.push('Minimum temperature cannot be higher than maximum temperature');
       }
