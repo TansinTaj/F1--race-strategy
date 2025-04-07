@@ -324,10 +324,10 @@ const InputForm = ({ onSubmit }) => {
       errors.push('Temperature values must be valid numbers');
     } else {
       if (tempMin < VALIDATION_RANGES.temperature.min || tempMin > VALIDATION_RANGES.temperature.max) {
-        errors.push(`Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
+        errors.push(Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C);
       }
       if (tempMax < VALIDATION_RANGES.temperature.min || tempMax > VALIDATION_RANGES.temperature.max) {
-        errors.push(`Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
+        errors.push(Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C);
       }
       if (tempMin > tempMax) {
         errors.push('Minimum temperature cannot be higher than maximum temperature');
@@ -337,7 +337,7 @@ const InputForm = ({ onSubmit }) => {
     // Slider validations
     if (data.trackConditionIndex < VALIDATION_RANGES.trackCondition.min || 
         data.trackConditionIndex > VALIDATION_RANGES.trackCondition.max) {
-      errors.push(`Track condition must be between ${VALIDATION_RANGES.trackCondition.min} and ${VALIDATION_RANGES.trackCondition.max}`);
+      errors.push(Track condition must be between ${VALIDATION_RANGES.trackCondition.min} and ${VALIDATION_RANGES.trackCondition.max});
     }
 
     const performanceInputs = {
@@ -348,7 +348,7 @@ const InputForm = ({ onSubmit }) => {
 
     Object.entries(performanceInputs).forEach(([name, value]) => {
       if (value < VALIDATION_RANGES.performance.min || value > VALIDATION_RANGES.performance.max) {
-        errors.push(`${name} must be between ${VALIDATION_RANGES.performance.min} and ${VALIDATION_RANGES.performance.max}`);
+        errors.push(${name} must be between ${VALIDATION_RANGES.performance.min} and ${VALIDATION_RANGES.performance.max});
       }
     });
 
@@ -425,7 +425,7 @@ const InputForm = ({ onSubmit }) => {
         } else if (error.response.status === 422) {
           alert('Invalid input data. Please check your form values.');
         } else {
-          alert(`Server error: ${error.response.data.detail || 'Unknown error'}`);
+          alert(Server error: ${error.response.data.detail || 'Unknown error'});
         }
       } else if (error.request) {
         // Request was made but no response received
@@ -495,7 +495,7 @@ const InputForm = ({ onSubmit }) => {
                 value={driver}
                 title={driverInfo[driver]?.name ? 
                   `${driverInfo[driver].name} - ${Object.entries(driverInfo[driver].history)
-                    .map(([team, years]) => `${team} (${years})`)
+                    .map(([team, years]) => ${team} (${years}))
                     .join(', ')}` 
                   : driver}
               >
