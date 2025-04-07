@@ -5,45 +5,69 @@ import PredictionOutput from './Components/PredictionOutput';
 import './Components/styles/Dashboard.css';
 
 const App = () => {
-  const [predictionData, setPredictionData] = useState({
-    totalPitStops: null,
-    pitStopStrategy: []
+  // ✅ Add initial formData state with all fields
+  const [formData, setFormData] = useState({
+    track: '',
+    year: '',
+    team: '',
+    driver: '',
+    meanAirTemp: '',
+    trackConditionIndex: '',
+    fuelConsumptionPerStint: 2.5,
+    stintPerformance: 0.5,
+    tyreDegradationPerStint: 0.5,
   });
 
- const handlePrediction = async (formData) => {
-  const payload = {
-    eventYear: formData.year,
-    EventName: formData.track,
-    Team: formData.team,
-    Driver: formData.driver,
-    meanAirTemp:
-      (parseFloat(formData.trackTempMin) + parseFloat(formData.trackTempMax)) / 2,
-    Rainfall: formData.rainfall
+  const [predictionData, setPredictionData] = useState({
+    totalPitStops: null,
+    pitStopStrategy: [],
+  });
+
+  const handlePrediction = async (formData) => {
+    try {
+      console.log("Sending form data:", formData);
+      const response = await fetch('http://127.0.0.1:8000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get prediction');
+      }
+
+      const result = await response.json();
+
+      setPredictionData({
+        totalPitStops: result["Total Pit Stops"],
+        pitStopStrategy: result["Tire Strategy"].map(strategy => ({
+          lap: strategy.Lap,
+          compound: strategy.Compound
+        }))
+      });
+
+      console.log('Prediction result:', result);
+    } catch (error) {
+      console.error('Error fetching prediction:', error);
+      alert("Prediction failed. Please check inputs or try again later.");
+    }
   };
-
-  try {
-    const response = await fetch('https://f1-race-strategy.onrender.com/predict', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    console.log('Prediction:', data);
-
-    setPredictionData(data);
-  } catch (err) {
-    console.error('Prediction failed:', err);
-  }
-};
 
   return (
     <div className="dashboard-container">
       <Header />
       <div className="dashboard-content">
-        <InputForm onSubmit={handlePrediction} />
+        {/* ✅ Pass formData and setFormData */}
+        <InputForm
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={(e) => {
+            e.preventDefault();
+            handlePrediction(formData);
+          }}
+        />
         <PredictionOutput data={predictionData} />
       </div>
     </div>
