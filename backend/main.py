@@ -46,6 +46,19 @@ class InputFeatures(BaseModel):
     Rainfall: str
     trackConditionIndex: int
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "eventYear": 2021,
+                "EventName": "British Grand Prix",
+                "Team": "Mercedes",
+                "Driver": "HAM",
+                "meanAirTemp": 24.5,
+                "Rainfall": "Light Rain",
+                "trackConditionIndex": 6
+            }
+        }
+
     @validator('eventYear')
     def validate_year(cls, v):
         if v not in [2018, 2019, 2020, 2021, 2022]:
@@ -61,7 +74,7 @@ class InputFeatures(BaseModel):
     @validator('meanAirTemp')
     def validate_temperature(cls, v):
         if not -50 <= v <= 60:
-            raise ValueError('Temperature must be between -50°C and 60°C')
+            raise ValueError('Temperature must be between -50\u00b0C and 60\u00b0C')
         return v
 
     @validator('Rainfall')
@@ -104,6 +117,46 @@ def model_info():
         "rainfall_options": ["No Rain", "Light Rain", "Medium Rain", "Heavy Rain"],
         "track_condition_range": {"min": 1, "max": 10},
         "performance_metrics_range": {"min": 0, "max": 1}
+    }
+
+@app.post("/predict", tags=["Prediction"])
+def predict(input_features: InputFeatures):
+    logger.info(f"Received prediction request: {input_features.dict()}")
+    try:
+        row, row_scaled = prepare_input_data(input_features)
+
+        total_pitstops, pit_laps = predict_pit_strategy(row_scaled)
+        tire_strategy = predict_tire_compounds(row_scaled, pit_laps)
+
+        response = {
+            "Total Pit Stops": total_pitstops,
+            "Pit Stop Laps": pit_laps,
+            "Tire Strategy": tire_strategy,
+            "Race Details": {
+                "Event": input_features.EventName,
+                "Year": input_features.eventYear,
+                "Team": input_features.Team,
+                "Driver": input_features.Driver
+            },
+            "Conditions": {
+                "Temperature": input_features.meanAirTemp,
+                "Rainfall": input_features.Rainfall,
+                "Track Condition": input_features.trackConditionIndex
+            },
+            "Performance Metrics": {
+                "Fuel Consumption": row["fuelConsumptionPerStint"],
+                "Stint Performance": row["stintPerformance"],
+                "Tyre Degradation": row["tyreDegradationPerStint"]
+            }
+        }
+
+        logger.info(f"Prediction successful: {response}")
+        return response
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Unexpected error in prediction: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
     }
 
 def prepare_input_data(input_features: InputFeatures) -> tuple[pd.Series, np.ndarray]:
