@@ -162,12 +162,15 @@ def prepare_input_data(input_features: InputFeatures) -> tuple[pd.Series, np.nda
 
 def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
     try:
-        logger.info(f"Running pit strategy prediction with input: {row_scaled}")
-        total_pitstops = int(pitstops_model.predict(row_scaled)[0])
-        pit_laps = pitlap_model.predict(row_scaled)[0]
-        logger.info(f"Predicted total pit stops: {total_pitstops}")
-        logger.info(f"Raw predicted pit laps: {pit_laps}")
+        logger.info(f"Running pit strategy prediction with input shape: {row_scaled.shape}")
+        logger.info(f"Input array: {row_scaled}")
         
+        total_pitstops = int(pitstops_model.predict(row_scaled)[0])
+        logger.info(f"Predicted total pit stops: {total_pitstops}")
+
+        pit_laps = pitlap_model.predict(row_scaled)[0]
+        logger.info(f"Raw predicted pit laps: {pit_laps}")
+
         if total_pitstops == 1:
             pit_laps = [int(pit_laps)]
         else:
