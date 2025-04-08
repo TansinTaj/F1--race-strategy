@@ -195,19 +195,38 @@ def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
 def predict_tire_compounds(row_scaled: np.ndarray, pit_laps: List[int]) -> List[Dict[str, Any]]:
     try:
         tire_strategy = []
+
         for lap in pit_laps:
-            compound_encoded = tire_model.predict(np.hstack((row_scaled, [[lap]])))[0]
+            logger.info(f"Predicting tire compound for lap {lap}")
+
+            # Form the input for the model by combining row_scaled and lap
+            input_features = np.hstack((row_scaled, [[lap]]))
+            logger.info(f"Input to tire_model: {input_features}")
+
+            # Make prediction
+            compound_encoded = tire_model.predict(input_features)[0]
+            logger.info(f"Encoded compound: {compound_encoded}")
+
+            # Decode using label encoder
+            if "Compound" not in label_encoders:
+                raise HTTPException(status_code=500, detail="Missing label encoder for 'Compound'")
+
             compound = label_encoders["Compound"].inverse_transform([compound_encoded])[0]
+            logger.info(f"Decoded compound: {compound}")
+
             tire_strategy.append({
                 "Lap": int(lap),
                 "Compound": compound
             })
+
         return tire_strategy
+
     except Exception as e:
-        logger.error(f"Error in tire compound prediction: {str(e)}")
+        import traceback
+        logger.error("Exception occurred in predict_tire_compounds:")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error predicting tire compounds")
 
-@app.post("/predict")
 def predict_strategy(input_features: InputFeatures):
     logger.info(f"Received prediction request: {input_features.dict()}")
     try:
