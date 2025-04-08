@@ -23,11 +23,241 @@ const InputForm = ({ onSubmit }) => {
     tyreDegradationPerStint: 0.5,
   });
 
-  const tracks = [...]; // trimmed for brevity
+  const tracks = [Abu Dhabi Grand Prix', 'Australian Grand Prix', 'Austrian Grand Prix', 'Azerbaijan Grand Prix', 'Bahrain Grand Prix', 'Belgian Grand Prix', 'Brazilian Grand Prix', 'British Grand Prix', 'Canadian Grand Prix', 'Chinese Grand Prix', 'Dutch Grand Prix', 'Eifel Grand Prix', 'Emilia Romagna Grand Prix', 'French Grand Prix', 'German Grand Prix', 'Hungarian Grand Prix', 'Italian Grand Prix', 'Japanese Grand Prix', 'Mexican Grand Prix', 'Mexico City Grand Prix', 'Miami Grand Prix', 'Monaco Grand Prix', 'Portuguese Grand Prix', 'Qatar Grand Prix', 'Russian Grand Prix', 'Sakhir Grand Prix', 'Singapore Grand Prix', 'Spanish Grand Prix', 'Styrian Grand Prix', 'São Paulo Grand Prix', 'Turkish Grand Prix', 'Tuscan Grand Prix', 'United States Grand Prix']; // trimmed for brevity
   const years = ['2018', '2019', '2020', '2021', '2022'];
-  const teams = [...]; // trimmed for brevity
-  const driverOptions = { ... };
-  const driverInfo = { ... };
+  const teams = ['Alfa Romeo', 'Alfa Romeo Racing', 'AlphaTauri', 'Alpine', 'Aston Martin', 'Ferrari', 'Force India', 'Haas F1 Team', 'McLaren', 'Mercedes', 'Racing Point', 'Red Bull Racing', 'Renault', 'Sauber', 'Toro Rosso', 'Williams']; 
+ const driverOptions = {
+    'Alfa Romeo': ['BOT', 'ZHO'],
+    'Alfa Romeo Racing': ['GIO', 'KUB', 'RAI'],
+    'AlphaTauri': ['GAS', 'KVY', 'TSU'],
+    'Alpine': ['ALO', 'OCO'],
+    'Aston Martin': ['HUL', 'STR', 'VET'],
+    'Ferrari': ['LEC', 'RAI', 'SAI', 'VET'],
+    'Force India': ['OCO', 'PER'],
+    'Haas F1 Team': ['GRO', 'MAG', 'MAZ', 'MSC'],
+    'McLaren': ['ALO', 'NOR', 'RIC', 'SAI', 'VAN'],
+    'Mercedes': ['BOT', 'HAM', 'RUS'],
+    'Racing Point': ['HUL', 'PER', 'STR'],
+    'Red Bull Racing': ['ALB', 'GAS', 'PER', 'RIC', 'VER'],
+    'Renault': ['HUL', 'OCO', 'RIC', 'SAI'],
+    'Sauber': ['ERI', 'LEC'],
+    'Toro Rosso': ['ALB', 'GAS', 'HAR', 'KVY'],
+    'Williams': ['ALB', 'KUB', 'LAT', 'RUS', 'SIR', 'STR']
+  };
+
+  const driverInfo = {
+    'ALB': {
+      name: 'Alexander Albon',
+      history: {
+        'Toro Rosso': '2019 (First half)',
+        'Red Bull Racing': '2019-2020',
+        'Williams': '2022'
+      }
+    },
+    'ALO': {
+      name: 'Fernando Alonso',
+      history: {
+        'McLaren': '2018',
+        'Alpine': '2021-2022'
+      }
+    },
+    'BOT': {
+      name: 'Valtteri Bottas',
+      history: {
+        'Mercedes': '2018-2021',
+        'Alfa Romeo': '2022'
+      }
+    },
+    'ERI': {
+      name: 'Marcus Ericsson',
+      history: {
+        'Sauber': '2018'
+      }
+    },
+    'GAS': {
+      name: 'Pierre Gasly',
+      history: {
+        'Toro Rosso': '2018, 2019 (Second half)',
+        'Red Bull Racing': '2019 (First half)',
+        'AlphaTauri': '2020-2022'
+      }
+    },
+    'GIO': {
+      name: 'Antonio Giovinazzi',
+      history: {
+        'Alfa Romeo Racing': '2019-2021'
+      }
+    },
+    'GRO': {
+      name: 'Romain Grosjean',
+      history: {
+        'Haas F1 Team': '2018-2020'
+      }
+    },
+    'HAM': {
+      name: 'Lewis Hamilton',
+      history: {
+        'Mercedes': '2018-2022'
+      }
+    },
+    'HAR': {
+      name: 'Brendon Hartley',
+      history: {
+        'Toro Rosso': '2018'
+      }
+    },
+    'HUL': {
+      name: 'Nico Hulkenberg',
+      history: {
+        'Renault': '2018-2019',
+        'Racing Point': '2020 (Substitute)',
+        'Aston Martin': '2022 (First 2 races)'
+      }
+    },
+    'KUB': {
+      name: 'Robert Kubica',
+      history: {
+        'Williams': '2019',
+        'Alfa Romeo Racing': '2021 (2 races)'
+      }
+    },
+    'KVY': {
+      name: 'Daniil Kvyat',
+      history: {
+        'Toro Rosso': '2019',
+        'AlphaTauri': '2020'
+      }
+    },
+    'LAT': {
+      name: 'Nicholas Latifi',
+      history: {
+        'Williams': '2020-2022'
+      }
+    },
+    'LEC': {
+      name: 'Charles Leclerc',
+      history: {
+        'Sauber': '2018',
+        'Ferrari': '2019-2022'
+      }
+    },
+    'MAG': {
+      name: 'Kevin Magnussen',
+      history: {
+        'Haas F1 Team': '2018-2020, 2022'
+      }
+    },
+    'MAZ': {
+      name: 'Nikita Mazepin',
+      history: {
+        'Haas F1 Team': '2021'
+      }
+    },
+    'MSC': {
+      name: 'Mick Schumacher',
+      history: {
+        'Haas F1 Team': '2021-2022'
+      }
+    },
+    'NOR': {
+      name: 'Lando Norris',
+      history: {
+        'McLaren': '2019-2022'
+      }
+    },
+    'OCO': {
+      name: 'Esteban Ocon',
+      history: {
+        'Force India': '2018',
+        'Renault': '2020',
+        'Alpine': '2021-2022'
+      }
+    },
+    'PER': {
+      name: 'Sergio Perez',
+      history: {
+        'Force India': '2018',
+        'Racing Point': '2019-2020',
+        'Red Bull Racing': '2021-2022'
+      }
+    },
+    'RAI': {
+      name: 'Kimi Räikkönen',
+      history: {
+        'Ferrari': '2018',
+        'Alfa Romeo Racing': '2019-2021'
+      }
+    },
+    'RIC': {
+      name: 'Daniel Ricciardo',
+      history: {
+        'Red Bull Racing': '2018',
+        'Renault': '2019-2020',
+        'McLaren': '2021-2022'
+      }
+    },
+    'RUS': {
+      name: 'George Russell',
+      history: {
+        'Williams': '2019-2021',
+        'Mercedes': '2020 (Sakhir GP), 2022'
+      }
+    },
+    'SAI': {
+      name: 'Carlos Sainz',
+      history: {
+        'Renault': '2018',
+        'McLaren': '2019-2020',
+        'Ferrari': '2021-2022'
+      }
+    },
+    'SIR': {
+      name: 'Sergey Sirotkin',
+      history: {
+        'Williams': '2018'
+      }
+    },
+    'STR': {
+      name: 'Lance Stroll',
+      history: {
+        'Williams': '2018',
+        'Racing Point': '2019-2020',
+        'Aston Martin': '2021-2022'
+      }
+    },
+    'TSU': {
+      name: 'Yuki Tsunoda',
+      history: {
+        'AlphaTauri': '2021-2022'
+      }
+    },
+    'VAN': {
+      name: 'Stoffel Vandoorne',
+      history: {
+        'McLaren': '2018'
+      }
+    },
+    'VER': {
+      name: 'Max Verstappen',
+      history: {
+        'Red Bull Racing': '2018-2022'
+      }
+    },
+    'VET': {
+      name: 'Sebastian Vettel',
+      history: {
+        'Ferrari': '2018-2020',
+        'Aston Martin': '2021-2022'
+      }
+    },
+    'ZHO': {
+      name: 'Zhou Guanyu',
+      history: {
+        'Alfa Romeo': '2022'
+      }
+    }
+  };
+  
   const rainfallOptions = ['No Rain', 'Light Rain', 'Medium Rain', 'Heavy Rain'];
 
   const handleChange = (e) => {
