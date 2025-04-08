@@ -107,47 +107,58 @@ def model_info():
     }
 
 def prepare_input_data(input_features: InputFeatures) -> tuple[pd.Series, np.ndarray]:
-    filtered = data[
-        (data["eventYear"] == input_features.eventYear) &
-        (data["EventName"] == input_features.EventName) &
-        (data["Team"] == input_features.Team) &
-        (data["Driver"] == input_features.Driver)
-    ]
+    try:
+        filtered = data[
+            (data["eventYear"] == input_features.eventYear) &
+            (data["EventName"] == input_features.EventName) &
+            (data["Team"] == input_features.Team) &
+            (data["Driver"] == input_features.Driver)
+        ]
 
-    if filtered.empty:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No matching race found for {input_features.Driver} with {input_features.Team} "
-                   f"at {input_features.EventName} in {input_features.eventYear}"
-        )
+        if filtered.empty:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No matching race found for {input_features.Driver} with {input_features.Team} "
+                       f"at {input_features.EventName} in {input_features.eventYear}"
+            )
 
-    row = filtered.iloc[0].copy()
+        row = filtered.iloc[0].copy()
 
-    # Update values from user input
-    row["meanAirTemp"] = input_features.meanAirTemp
-    row["Rainfall"] = {
-        "No Rain": 0.0,
-        "Light Rain": 0.25,
-        "Medium Rain": 0.5,
-        "Heavy Rain": 0.75
-    }.get(input_features.Rainfall, 0.0)
-    row["trackConditionIndex"] = input_features.trackConditionIndex
+        # Add dynamic inputs
+        row["meanAirTemp"] = input_features.meanAirTemp
+        row["Rainfall"] = {
+            "No Rain": 0.0,
+            "Light Rain": 0.25,
+            "Medium Rain": 0.5,
+            "Heavy Rain": 0.75
+        }.get(input_features.Rainfall, 0.0)
+        row["trackConditionIndex"] = input_features.trackConditionIndex
 
-    # Encode categorical features
-    for col, le in label_encoders.items():
-        if col in row:
-            row[col] = le.transform([row[col]])[0]
+        # Fill missing features from derived ones
+        row["fuelConsumptionPerStint"] = row.get("fuel_slope", 0.5)
+        row["stintPerformance"] = row.get("lag_slope_mean", 0.5)
+        row["tyreDegradationPerStint"] = row.get("deg_slope", 0.5)
 
-    numeric_features = scaler.feature_names_in_
-    missing_cols = [col for col in numeric_features if col not in row.index]
-    if missing_cols:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Missing required features: {missing_cols}"
-        )
+        # Encode categorical features
+        for col, le in label_encoders.items():
+            if col in row:
+                row[col] = le.transform([row[col]])[0]
 
-    row_scaled = scaler.transform(row[numeric_features].values.reshape(1, -1))
-    return row, row_scaled
+        numeric_features = scaler.feature_names_in_
+        missing_cols = [col for col in numeric_features if col not in row.index]
+        if missing_cols:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Missing required features: {missing_cols}"
+            )
+
+        row_scaled = scaler.transform(row[numeric_features].values.reshape(1, -1))
+        return row, row_scaled
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error preparing input data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error preparing input data: {str(e)}")
 
 def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
     try:
@@ -181,9 +192,6 @@ def predict_tire_compounds(row_scaled: np.ndarray, pit_laps: List[int]) -> List[
 def predict_strategy(input_features: InputFeatures):
     logger.info(f"Received prediction request: {input_features.dict()}")
     try:
-        row["fuelConsumptionPerStint"] = row["fuel_slope"]
-        row["stintPerformance"] = row["lag_slope_mean"]
-        row["tyreDegradationPerStint"] = row["deg_slope"]
         row, row_scaled = prepare_input_data(input_features)
         total_pitstops, pit_laps = predict_pit_strategy(row_scaled)
         tire_strategy = predict_tire_compounds(row_scaled, pit_laps)
@@ -204,9 +212,9 @@ def predict_strategy(input_features: InputFeatures):
                 "Track Condition": input_features.trackConditionIndex
             },
             "Performance Metrics": {
-                "Fuel Consumption": row["fuel_slope"],
-                "Stint Performance": row["lag_slope_mean"],
-                "Tyre Degradation": row["deg_slope"]
+                "Fuel Consumption": row["fuelConsumptionPerStint"],
+                "Stint Performance": row["stintPerformance"],
+                "Tyre Degradation": row["tyreDegradationPerStint"]
             }
         }
 
