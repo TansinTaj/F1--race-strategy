@@ -165,24 +165,26 @@ def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
         logger.info(f"Running pit strategy prediction with input shape: {row_scaled.shape}")
         logger.info(f"Input array: {row_scaled}")
 
+        # Predict total number of pit stops
         total_pitstops = int(pitstops_model.predict(row_scaled)[0])
         logger.info(f"Predicted total pit stops: {total_pitstops}")
 
+        # Predict pit laps
         pit_laps_raw = pitlap_model.predict(row_scaled)[0]
         logger.info(f"Raw predicted pit laps: {pit_laps_raw} (type: {type(pit_laps_raw)})")
 
-        # Ensure pit_laps is always a list
-        if total_pitstops == 1:
-            pit_laps = [int(pit_laps_raw)]
+        # Normalize the output to always be a list of ints
+        if isinstance(pit_laps_raw, (list, np.ndarray)):
+            # Flatten nested structures
+            pit_laps_flat = [int(round(lap)) for lap in np.ravel(pit_laps_raw)]
         else:
-            # If single prediction is returned as scalar, wrap in list
-            if isinstance(pit_laps_raw, (int, float, np.integer, np.float64)):
-                pit_laps = [int(pit_laps_raw)]
-            else:
-                pit_laps = sorted([int(lap) for lap in pit_laps_raw])[:total_pitstops]
+            pit_laps_flat = [int(round(pit_laps_raw))]
 
+        pit_laps = sorted(pit_laps_flat[:total_pitstops])
         logger.info(f"Final pit laps used: {pit_laps}")
+
         return total_pitstops, pit_laps
+
     except Exception as e:
         import traceback
         logger.error("Exception occurred in predict_pit_strategy:")
