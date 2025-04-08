@@ -398,7 +398,7 @@ const InputForm = ({ onSubmit }) => {
       console.log('Sending data to backend:', backendData);
 
       // Make API call with error handling
-      const response = await axios.post('http://localhost:8000/predict', backendData);
+      const response = await axios.post('https://f1-race-strategy.onrender.com/predict', backendData);
       console.log('Received response:', response.data);
 
       if (response.data) {
