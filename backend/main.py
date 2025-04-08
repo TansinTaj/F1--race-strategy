@@ -193,6 +193,11 @@ def predict_strategy(input_features: InputFeatures):
     logger.info(f"Received prediction request: {input_features.dict()}")
     try:
         row, row_scaled = prepare_input_data(input_features)
+        
+        row["fuelConsumptionPerStint"] = row["fuel_slope"]
+        row["stintPerformance"] = row["lag_slope_mean"]
+        row["tyreDegradationPerStint"] = row["deg_slope"]
+
         total_pitstops, pit_laps = predict_pit_strategy(row_scaled)
         tire_strategy = predict_tire_compounds(row_scaled, pit_laps)
 
