@@ -185,6 +185,7 @@ def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
         return total_pitstops, pit_laps
     except Exception as e:
         import traceback
+        logger.error("Exception occurred in predict_pit_strategy:")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error predicting pit strategy")
 
