@@ -164,23 +164,30 @@ def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
     try:
         logger.info(f"Running pit strategy prediction with input shape: {row_scaled.shape}")
         logger.info(f"Input array: {row_scaled}")
-        
+
         total_pitstops = int(pitstops_model.predict(row_scaled)[0])
         logger.info(f"Predicted total pit stops: {total_pitstops}")
 
-        pit_laps = pitlap_model.predict(row_scaled)[0]
-        logger.info(f"Raw predicted pit laps: {pit_laps}")
+        pit_laps_raw = pitlap_model.predict(row_scaled)[0]
+        logger.info(f"Raw predicted pit laps: {pit_laps_raw} (type: {type(pit_laps_raw)})")
 
+        # Ensure pit_laps is always a list
         if total_pitstops == 1:
-            pit_laps = [int(pit_laps)]
+            pit_laps = [int(pit_laps_raw)]
         else:
-            pit_laps = sorted([int(lap) for lap in pit_laps])[:total_pitstops]
+            # If single prediction is returned as scalar, wrap in list
+            if isinstance(pit_laps_raw, (int, float, np.integer, np.float64)):
+                pit_laps = [int(pit_laps_raw)]
+            else:
+                pit_laps = sorted([int(lap) for lap in pit_laps_raw])[:total_pitstops]
 
         logger.info(f"Final pit laps used: {pit_laps}")
         return total_pitstops, pit_laps
     except Exception as e:
-        logger.error(f"Error in pit strategy prediction: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error predicting pit strategy")
+
 
 def predict_tire_compounds(row_scaled: np.ndarray, pit_laps: List[int]) -> List[Dict[str, Any]]:
     try:
