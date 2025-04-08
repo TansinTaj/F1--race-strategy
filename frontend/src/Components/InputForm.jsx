@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './styles/Dashboard.css';
+import './styles/Dashboard.css'; // ✅ Corrected path
 
 const VALIDATION_RANGES = {
-  temperature: { min: -50, max: 60 },
-  trackCondition: { min: 1, max: 10 },
-  performance: { min: 0, max: 1 }
+  temperature: {
+    min: -50,  // Adjust these based on your data
+    max: 60
+  },
+  trackCondition: {
+    min: 1,
+    max: 10
+  },
+  performance: {  // For fuel, stint, and tyre degradation
+    min: 0,
+    max: 1
+  }
 };
 
 const InputForm = ({ onSubmit }) => {
@@ -17,16 +26,37 @@ const InputForm = ({ onSubmit }) => {
     trackTempMin: '',
     trackTempMax: '',
     rainfall: '',
-    trackConditionIndex: 5,
-    fuelConsumptionPerStint: 0.5,
-    stintPerformance: 0.5,
-    tyreDegradationPerStint: 0.5,
+    // Adding new sliders with default values
+    trackConditionIndex: 5,  // Scale of 1-10
+    fuelConsumptionPerStint: 0.5,  // Scale of 0-1
+    stintPerformance: 0.5,  // Scale of 0-1
+    tyreDegradationPerStint: 0.5,  // Scale of 0-1
   });
 
-  const tracks = ['Abu Dhabi Grand Prix', 'Australian Grand Prix', 'Austrian Grand Prix', 'Azerbaijan Grand Prix', 'Bahrain Grand Prix', 'Belgian Grand Prix', 'Brazilian Grand Prix', 'British Grand Prix', 'Canadian Grand Prix', 'Chinese Grand Prix', 'Dutch Grand Prix', 'Eifel Grand Prix', 'Emilia Romagna Grand Prix', 'French Grand Prix', 'German Grand Prix', 'Hungarian Grand Prix', 'Italian Grand Prix', 'Japanese Grand Prix', 'Mexican Grand Prix', 'Mexico City Grand Prix', 'Miami Grand Prix', 'Monaco Grand Prix', 'Portuguese Grand Prix', 'Qatar Grand Prix', 'Russian Grand Prix', 'Sakhir Grand Prix', 'Singapore Grand Prix', 'Spanish Grand Prix', 'Styrian Grand Prix', 'São Paulo Grand Prix', 'Turkish Grand Prix', 'Tuscan Grand Prix', 'United States Grand Prix']; // trimmed for brevity
+  const tracks = [
+    'Abu Dhabi Grand Prix', 'Australian Grand Prix', 'Austrian Grand Prix',
+    'Azerbaijan Grand Prix', 'Bahrain Grand Prix', 'Belgian Grand Prix',
+    'Brazilian Grand Prix', 'British Grand Prix', 'Canadian Grand Prix',
+    'Chinese Grand Prix', 'Dutch Grand Prix', 'Eifel Grand Prix',
+    'Emilia Romagna Grand Prix', 'French Grand Prix', 'German Grand Prix',
+    'Hungarian Grand Prix', 'Italian Grand Prix', 'Japanese Grand Prix',
+    'Mexican Grand Prix', 'Mexico City Grand Prix', 'Miami Grand Prix',
+    'Monaco Grand Prix', 'Portuguese Grand Prix', 'Qatar Grand Prix',
+    'Russian Grand Prix', 'Sakhir Grand Prix', 'Singapore Grand Prix',
+    'Spanish Grand Prix', 'Styrian Grand Prix', 'São Paulo Grand Prix',
+    'Turkish Grand Prix', 'Tuscan Grand Prix', 'United States Grand Prix'
+  ];
+
   const years = ['2018', '2019', '2020', '2021', '2022'];
-  const teams = ['Alfa Romeo', 'Alfa Romeo Racing', 'AlphaTauri', 'Alpine', 'Aston Martin', 'Ferrari', 'Force India', 'Haas F1 Team', 'McLaren', 'Mercedes', 'Racing Point', 'Red Bull Racing', 'Renault', 'Sauber', 'Toro Rosso', 'Williams']; 
- const driverOptions = {
+
+  const teams = [
+    'Alfa Romeo', 'Alfa Romeo Racing', 'AlphaTauri', 'Alpine',
+    'Aston Martin', 'Ferrari', 'Force India', 'Haas F1 Team',
+    'McLaren', 'Mercedes', 'Racing Point', 'Red Bull Racing',
+    'Renault', 'Sauber', 'Toro Rosso', 'Williams'
+  ];
+
+  const driverOptions = {
     'Alfa Romeo': ['BOT', 'ZHO'],
     'Alfa Romeo Racing': ['GIO', 'KUB', 'RAI'],
     'AlphaTauri': ['GAS', 'KVY', 'TSU'],
@@ -257,37 +287,54 @@ const InputForm = ({ onSubmit }) => {
       }
     }
   };
-  
+
   const rainfallOptions = ['No Rain', 'Light Rain', 'Medium Rain', 'Heavy Rain'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value, ...(name === 'team' ? { driver: '' } : {}) }));
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+      ...(name === 'team' ? { driver: '' } : {})
+    }));
   };
 
   const handleSliderChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: parseFloat(value) }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: parseFloat(value)
+    }));
   };
 
   const validateFormData = (data) => {
     const errors = [];
+    
+    // Required fields
     if (!data.track) errors.push('Track is required');
     if (!data.team) errors.push('Team is required');
     if (!data.driver) errors.push('Driver is required');
     if (!data.rainfall) errors.push('Rainfall is required');
-
+    
+    // Temperature validation
     const tempMin = parseInt(data.trackTempMin);
     const tempMax = parseInt(data.trackTempMax);
-    if (isNaN(tempMin) || isNaN(tempMax)) errors.push('Temperature values must be valid numbers');
-    else {
-      if (tempMin < VALIDATION_RANGES.temperature.min || tempMin > VALIDATION_RANGES.temperature.max)
+    
+    if (isNaN(tempMin) || isNaN(tempMax)) {
+      errors.push('Temperature values must be valid numbers');
+    } else {
+      if (tempMin < VALIDATION_RANGES.temperature.min || tempMin > VALIDATION_RANGES.temperature.max) {
         errors.push(`Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
-      if (tempMax < VALIDATION_RANGES.temperature.min || tempMax > VALIDATION_RANGES.temperature.max)
+      }
+      if (tempMax < VALIDATION_RANGES.temperature.min || tempMax > VALIDATION_RANGES.temperature.max) {
         errors.push(`Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
-      if (tempMin > tempMax) errors.push('Minimum temperature cannot be higher than maximum temperature');
+      }
+      if (tempMin > tempMax) {
+        errors.push('Minimum temperature cannot be higher than maximum temperature');
+      }
     }
 
+    // Slider validations
     if (data.trackConditionIndex < VALIDATION_RANGES.trackCondition.min || 
         data.trackConditionIndex > VALIDATION_RANGES.trackCondition.max) {
       errors.push(`Track condition must be between ${VALIDATION_RANGES.trackCondition.min} and ${VALIDATION_RANGES.trackCondition.max}`);
@@ -299,9 +346,9 @@ const InputForm = ({ onSubmit }) => {
       'Tyre degradation': data.tyreDegradationPerStint
     };
 
-    Object.entries(performanceInputs).forEach(([label, value]) => {
+    Object.entries(performanceInputs).forEach(([name, value]) => {
       if (value < VALIDATION_RANGES.performance.min || value > VALIDATION_RANGES.performance.max) {
-        errors.push(`${label} must be between ${VALIDATION_RANGES.performance.min} and ${VALIDATION_RANGES.performance.max}`);
+        errors.push(`${name} must be between ${VALIDATION_RANGES.performance.min} and ${VALIDATION_RANGES.performance.max}`);
       }
     });
 
@@ -310,6 +357,8 @@ const InputForm = ({ onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form data
     const validationErrors = validateFormData(formData);
     if (validationErrors.length > 0) {
       alert('Please correct the following errors:\n' + validationErrors.join('\n'));
@@ -317,9 +366,21 @@ const InputForm = ({ onSubmit }) => {
     }
 
     try {
+      // Convert temperature inputs to numbers and calculate mean
       const tempMin = parseInt(formData.trackTempMin);
       const tempMax = parseInt(formData.trackTempMax);
+      
+      if (isNaN(tempMin) || isNaN(tempMax)) {
+        alert('Temperature values must be valid numbers');
+        return;
+      }
 
+      if (tempMin > tempMax) {
+        alert('Minimum temperature cannot be higher than maximum temperature');
+        return;
+      }
+
+      // Prepare data for backend matching the InputFeatures schema
       const backendData = {
         eventYear: parseInt(formData.eventYear),
         EventName: formData.track,
@@ -327,39 +388,223 @@ const InputForm = ({ onSubmit }) => {
         Driver: formData.driver,
         meanAirTemp: (tempMin + tempMax) / 2,
         Rainfall: formData.rainfall,
+        // Ensure these values are within the expected ranges
         trackConditionIndex: Math.min(10, Math.max(1, formData.trackConditionIndex)),
         fuelConsumptionPerStint: Math.min(1, Math.max(0, formData.fuelConsumptionPerStint)),
         stintPerformance: Math.min(1, Math.max(0, formData.stintPerformance)),
         tyreDegradationPerStint: Math.min(1, Math.max(0, formData.tyreDegradationPerStint))
       };
 
+      console.log('Sending data to backend:', backendData);
+
+      // Make API call with error handling
       const response = await axios.post('http://localhost:8000/predict', backendData);
+      console.log('Received response:', response.data);
 
       if (response.data) {
+        // Format the prediction data for display
         const prediction = {
           totalPitStops: response.data["Total Pit Stops"],
           pitStopLaps: response.data["Pit Stop Laps"],
           tireStrategy: response.data["Tire Strategy"]
         };
+        
         onSubmit(prediction);
       } else {
         throw new Error('No data received from the backend');
       }
-
+      
     } catch (error) {
       console.error('Prediction error:', error);
+      
+      // More specific error messages based on the error type
       if (error.response) {
-        if (error.response.status === 404) alert('No matching race found.');
-        else if (error.response.status === 422) alert('Invalid input data.');
-        else alert(`Server error: ${error.response.data.detail || 'Unknown error'}`);
-      } else alert('An unexpected error occurred.');
+        // Backend returned an error response
+        if (error.response.status === 404) {
+          alert('No matching race found in the dataset. Please check your race details.');
+        } else if (error.response.status === 422) {
+          alert('Invalid input data. Please check your form values.');
+        } else {
+          alert(`Server error: ${error.response.data.detail || 'Unknown error'}`);
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        alert('Unable to reach the prediction server. Please check if the backend is running.');
+      } else {
+        // Something else went wrong
+        alert('Error making prediction: ' + error.message);
+      }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="input-form">
-      {/* Form fields here */}
-    </form>
+    <div className="input-form">
+      <form onSubmit={handleSubmit}>
+        {/* Original Inputs (unchanged) */}
+        <div className="form-group">
+          <label>Track</label>
+          <select 
+            name="track"
+            value={formData.track}
+            onChange={handleChange}
+            required
+          >
+            <option value="" disabled>Select track</option>
+            {tracks.map(track => (
+              <option key={track} value={track}>{track}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Year</label>
+          <select name="eventYear" value={formData.eventYear} onChange={handleChange} required>
+            <option value="" disabled>Select year</option>
+            {years.map(year => <option key={year} value={year}>{year}</option>)}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Team</label>
+          <select 
+            name="team"
+            value={formData.team}
+            onChange={handleChange}
+            required
+          >
+            <option value="" disabled>Select team</option>
+            {teams.map(team => (
+              <option key={team} value={team}>{team}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Driver</label>
+          <select 
+            name="driver"
+            value={formData.driver}
+            onChange={handleChange}
+            required
+            disabled={!formData.team}
+          >
+            <option value="" disabled>Select driver</option>
+            {formData.team && driverOptions[formData.team].map(driver => (
+              <option 
+                key={driver} 
+                value={driver}
+                title={driverInfo[driver]?.name ? 
+                  `${driverInfo[driver].name} - ${Object.entries(driverInfo[driver].history)
+                    .map(([team, years]) => `${team} (${years})`)
+                    .join(', ')}` 
+                  : driver}
+              >
+                {driver}
+              </option>
+            ))}
+          </select>
+        </div>
+
+          <div className="form-group">
+          <label>Track Temp (°C)</label>
+            <div className="temp-range">
+            <input 
+              type="number" 
+              name="trackTempMin"
+              placeholder="Min"
+              value={formData.trackTempMin}
+              onChange={handleChange}
+              required
+            />
+            <input 
+              type="number" 
+              name="trackTempMax"
+              placeholder="Max"
+              value={formData.trackTempMax}
+              onChange={handleChange}
+              required
+            />
+            </div>
+          </div>
+
+        {/* New slider inputs */}
+        <div className="form-group">
+          <label>Track Condition (1-10)</label>
+          <input
+            type="range"
+            name="trackConditionIndex"
+            min="1"
+            max="10"
+            value={formData.trackConditionIndex}
+            onChange={handleSliderChange}
+            className="slider"
+          />
+          <span>{formData.trackConditionIndex}</span>
+          </div>
+
+          <div className="form-group">
+          <label>Fuel Consumption</label>
+          <input
+            type="range"
+            name="fuelConsumptionPerStint"
+            min="0"
+            max="1"
+            step="0.1"
+            value={formData.fuelConsumptionPerStint}
+            onChange={handleSliderChange}
+            className="slider"
+          />
+          <span>{formData.fuelConsumptionPerStint}</span>
+            </div>
+
+        <div className="form-group">
+          <label>Stint Performance</label>
+          <input
+            type="range"
+            name="stintPerformance"
+            min="0"
+            max="1"
+            step="0.1"
+            value={formData.stintPerformance}
+            onChange={handleSliderChange}
+            className="slider"
+          />
+          <span>{formData.stintPerformance}</span>
+          </div>
+
+        <div className="form-group">
+          <label>Tyre Degradation</label>
+          <input
+            type="range"
+            name="tyreDegradationPerStint"
+            min="0"
+            max="1"
+            step="0.1"
+            value={formData.tyreDegradationPerStint}
+            onChange={handleSliderChange}
+            className="slider"
+          />
+          <span>{formData.tyreDegradationPerStint}</span>
+        </div>
+
+        <div className="form-group">
+          <label>Rainfall</label>
+          <select 
+            name="rainfall"
+            value={formData.rainfall}
+            onChange={handleChange}
+            required
+          >
+            <option value="" disabled>Select option</option>
+            {rainfallOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+
+        <button type="submit" className="predict-button">PREDICT</button>
+      </form>
+    </div>
   );
 };
 
