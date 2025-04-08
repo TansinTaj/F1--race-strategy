@@ -252,8 +252,8 @@ def predict_tire_compounds(row_scaled: np.ndarray, pit_laps: List[int]) -> List[
         for lap in pit_laps:
             logger.info(f"Predicting tire compound for lap {lap}")
 
-            # Form the input for the model by combining row_scaled and lap
-            input_features = np.hstack((row_scaled, [[lap]]))
+            # Use only row_scaled as input to the model (no lap appended)
+            input_features = row_scaled
             logger.info(f"Input to tire_model: {input_features}")
 
             # Make prediction
@@ -273,6 +273,12 @@ def predict_tire_compounds(row_scaled: np.ndarray, pit_laps: List[int]) -> List[
             })
 
         return tire_strategy
+
+    except Exception as e:
+        logger.error("Exception occurred in predict_tire_compounds:")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Error predicting tire strategy")
+
 
     except Exception as e:
         import traceback
