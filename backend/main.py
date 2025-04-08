@@ -157,7 +157,7 @@ def predict(input_features: InputFeatures):
     except Exception as e:
         logger.error(f"Unexpected error in prediction: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-    }
+    
 
 def prepare_input_data(input_features: InputFeatures) -> tuple[pd.Series, np.ndarray]:
     try:
