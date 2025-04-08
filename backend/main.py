@@ -135,9 +135,9 @@ def prepare_input_data(input_features: InputFeatures) -> tuple[pd.Series, np.nda
         row["trackConditionIndex"] = input_features.trackConditionIndex
 
         # Fill missing features from derived ones
-        row["fuelConsumptionPerStint"] = row.get("fuel_slope", 0.5)
-        row["stintPerformance"] = row.get("lag_slope_mean", 0.5)
-        row["tyreDegradationPerStint"] = row.get("deg_slope", 0.5)
+        row["fuelConsumptionPerStint"] = row["fuel_slope"] if pd.notnull(row["fuel_slope"]) else 0.5
+        row["stintPerformance"] = row["lag_slope_mean"] if pd.notnull(row["lag_slope_mean"]) else 0.5
+        row["tyreDegradationPerStint"] = row["deg_slope"] if pd.notnull(row["deg_slope"]) else 0.5
 
         # Encode categorical features
         for col, le in label_encoders.items():
@@ -193,10 +193,6 @@ def predict_strategy(input_features: InputFeatures):
     logger.info(f"Received prediction request: {input_features.dict()}")
     try:
         row, row_scaled = prepare_input_data(input_features)
-        
-        row["fuelConsumptionPerStint"] = row["fuel_slope"]
-        row["stintPerformance"] = row["lag_slope_mean"]
-        row["tyreDegradationPerStint"] = row["deg_slope"]
 
         total_pitstops, pit_laps = predict_pit_strategy(row_scaled)
         tire_strategy = predict_tire_compounds(row_scaled, pit_laps)
