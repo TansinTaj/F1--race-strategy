@@ -401,12 +401,16 @@ const InputForm = ({ onSubmit }) => {
       // Make API call with improved error handling
       const response = await axios.post('https://f1-race-strategy.onrender.com/predict', backendData);
       
+      
       console.log('API call successful');
       console.log('Raw response:', response);
 
       if (response && response.data) {
         console.log('Processing response data:', response.data);
-        
+
+      console.log('Total Pit Stops:', response.data["Total Pit Stops"]);
+      console.log('Full Tire Strategy:', response.data["Tire Strategy"]);
+      
         // Format the prediction data for display
         const prediction = {
           totalPitStops: response.data["Total Pit Stops"],
