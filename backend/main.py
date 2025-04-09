@@ -222,23 +222,27 @@ def predict_pit_strategy(row_scaled: np.ndarray) -> tuple[int, List[int]]:
         total_pitstops = int(pitstops_model.predict(row_scaled)[0])
         logger.info(f"Predicted total pit stops: {total_pitstops}")
 
-        # For now, assume race has 60 laps
-        total_laps = 60
+        # Predict pit laps
+        pit_laps_raw = pitlap_model.predict(row_scaled)[0]
+        logger.info(f"Raw predicted pit laps: {pit_laps_raw} (type: {type(pit_laps_raw)})")
 
-        # Spread pit stops evenly across the race
-        if total_pitstops > 0:
-            pit_laps = [int((i + 1) * total_laps / (total_pitstops + 1)) for i in range(total_pitstops)]
+        # Normalize the output to always be a list of ints
+        if isinstance(pit_laps_raw, (list, np.ndarray)):
+            # Flatten nested structures
+            pit_laps_flat = [int(round(lap)) for lap in np.ravel(pit_laps_raw)]
         else:
-            pit_laps = []
+            pit_laps_flat = [int(round(pit_laps_raw))]
 
-        logger.info(f"Generated pit laps based on total stops: {pit_laps}")
+        pit_laps = sorted(pit_laps_flat[:total_pitstops])
+        logger.info(f"Final pit laps used: {pit_laps}")
+
         return total_pitstops, pit_laps
 
     except Exception as e:
+        import traceback
         logger.error("Exception occurred in predict_pit_strategy:")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error predicting pit strategy")
- 
 
 
 def predict_tire_compounds(row_scaled: np.ndarray, pit_laps: List[int]) -> List[Dict[str, Any]]:
