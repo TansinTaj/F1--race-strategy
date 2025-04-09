@@ -324,10 +324,10 @@ const InputForm = ({ onSubmit }) => {
       errors.push('Temperature values must be valid numbers');
     } else {
       if (tempMin < VALIDATION_RANGES.temperature.min || tempMin > VALIDATION_RANGES.temperature.max) {
-        errors.push(Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C);
+        errors.push(`Minimum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
       }
       if (tempMax < VALIDATION_RANGES.temperature.min || tempMax > VALIDATION_RANGES.temperature.max) {
-        errors.push(Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C);
+        errors.push(`Maximum temperature must be between ${VALIDATION_RANGES.temperature.min}°C and ${VALIDATION_RANGES.temperature.max}°C`);
       }
       if (tempMin > tempMax) {
         errors.push('Minimum temperature cannot be higher than maximum temperature');
@@ -337,7 +337,7 @@ const InputForm = ({ onSubmit }) => {
     // Slider validations
     if (data.trackConditionIndex < VALIDATION_RANGES.trackCondition.min || 
         data.trackConditionIndex > VALIDATION_RANGES.trackCondition.max) {
-      errors.push(Track condition must be between ${VALIDATION_RANGES.trackCondition.min} and ${VALIDATION_RANGES.trackCondition.max});
+      errors.push(`Track condition must be between ${VALIDATION_RANGES.trackCondition.min} and ${VALIDATION_RANGES.trackCondition.max}`);
     }
 
     const performanceInputs = {
@@ -348,7 +348,7 @@ const InputForm = ({ onSubmit }) => {
 
     Object.entries(performanceInputs).forEach(([name, value]) => {
       if (value < VALIDATION_RANGES.performance.min || value > VALIDATION_RANGES.performance.max) {
-        errors.push(${name} must be between ${VALIDATION_RANGES.performance.min} and ${VALIDATION_RANGES.performance.max});
+        errors.push(`${name} must be between ${VALIDATION_RANGES.performance.min} and ${VALIDATION_RANGES.performance.max}`);
       }
     });
 
@@ -425,7 +425,7 @@ const InputForm = ({ onSubmit }) => {
         } else if (error.response.status === 422) {
           alert('Invalid input data. Please check your form values.');
         } else {
-          alert(Server error: ${error.response.data.detail || 'Unknown error'});
+          alert(`Server error: ${error.response.data.detail || 'Unknown error'}`);
         }
       } else if (error.request) {
         // Request was made but no response received
@@ -434,36 +434,6 @@ const InputForm = ({ onSubmit }) => {
         // Something else went wrong
         alert('Error making prediction: ' + error.message);
       }
-      if (error.response) {
-        // Backend returned an error response
-        if (error.response.status === 404) {
-          alert('Backend endpoint not found (404). Please check the server URL.');
-        } else if (error.response.status === 500) {
-          alert('Server error (500). Please try again later.');
-        } else {
-          alert(`Unexpected error from server: ${error.response.statusText}`);
-        }
-      } else if (error.request) {
-        // No response received
-        alert('No response from server. Please check your internet connection or server status.');
-      } else {
-        // Error setting up the request
-        alert(`Error in setting up the request: ${error.message}`);
-      }
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="input-form">
-      {/* Your form JSX components here — dropdowns, sliders, text inputs, etc. */}
-      {/* I assume you’ll render track, year, team, driver, temperature inputs, sliders, and rainfall options here */}
-      <button type="submit">Predict Race Strategy</button>
-    </form>
-  );
-};
-
-export default InputForm;
-
     }
   };
 
@@ -524,9 +494,9 @@ export default InputForm;
                 key={driver} 
                 value={driver}
                 title={driverInfo[driver]?.name ? 
-                  ${driverInfo[driver].name} - ${Object.entries(driverInfo[driver].history)
-                    .map(([team, years]) => ${team} (${years}))
-                    .join(', ')} 
+                  `${driverInfo[driver].name} - ${Object.entries(driverInfo[driver].history)
+                    .map(([team, years]) => `${team} (${years})`)
+                    .join(', ')}` 
                   : driver}
               >
                 {driver}
