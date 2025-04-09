@@ -395,13 +395,18 @@ const InputForm = ({ onSubmit }) => {
         tyreDegradationPerStint: Math.min(1, Math.max(0, formData.tyreDegradationPerStint))
       };
 
+      console.log('About to make API call');
       console.log('Sending data to backend:', backendData);
 
-      // Make API call with error handling
+      // Make API call with improved error handling
       const response = await axios.post('https://f1-race-strategy.onrender.com/predict', backendData);
-      console.log('Received response:', response.data);
+      
+      console.log('API call successful');
+      console.log('Raw response:', response);
 
-      if (response.data) {
+      if (response && response.data) {
+        console.log('Processing response data:', response.data);
+        
         // Format the prediction data for display
         const prediction = {
           totalPitStops: response.data["Total Pit Stops"],
@@ -416,24 +421,38 @@ const InputForm = ({ onSubmit }) => {
       
     } catch (error) {
       console.error('Prediction error:', error);
+      console.error('Detailed error information:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'No response',
+        request: error.request ? 'Request made' : 'No request'
+      });
       
-      // More specific error messages based on the error type
+      let errorMessage = 'An unknown error occurred';
+      
       if (error.response) {
         // Backend returned an error response
         if (error.response.status === 404) {
-          alert('No matching race found in the dataset. Please check your race details.');
+          errorMessage = 'No matching race found in the dataset. Please check your race details.';
         } else if (error.response.status === 422) {
-          alert('Invalid input data. Please check your form values.');
+          errorMessage = 'Invalid input data. Please check your form values.';
         } else {
-          alert(`Server error: ${error.response.data.detail || 'Unknown error'}`);
+          errorMessage = `Server error: ${error.response.data?.detail || error.response.statusText || 'Unknown error'}`;
         }
       } else if (error.request) {
         // Request was made but no response received
-        alert('Unable to reach the prediction server. Please check if the backend is running.');
+        errorMessage = 'Unable to reach the prediction server. Please check if the backend is running.';
       } else {
         // Something else went wrong
-        alert('Error making prediction: ' + error.message);
+        errorMessage = `Error making prediction: ${error.message || 'Unknown error'}`;
       }
+      
+      // Safely alert the error
+      alert(errorMessage);
     }
   };
 
